@@ -1,0 +1,15 @@
+{
+  "name": "dumpapp",
+  "private": true,
+  "version": "0.0.1",
+  "description": "File Dump App",
+  "license": "WTFPL",
+  "devDependencies": {
+    "karma": "~0.10",
+    "karma-coverage": "~0.2.6"
+  },
+  "scripts": {
+    "pretest": "npm install",
+    "test": "./node_modules/karma/bin/karma start karma.conf.js --single-run"
+  }
+}

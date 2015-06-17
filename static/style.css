@@ -1,0 +1,38 @@
+#content {
+    width: 95%;
+    margin: 0 auto;
+}
+
+#content h1 {
+    text-align: center;
+}
+
+.list-row {
+    margin: 0 auto;
+}
+
+.filename {
+    width: 30%;
+    margin-left: 20%;
+    display: inline-block;
+}
+
+.filesize {
+    width: 10%;
+    display: inline-block;
+}
+
+.filevotes {
+    width: 10%;
+    margin-right: 15%;
+    display: inline-block;
+}
+
+.drop-box {
+    width: 25%;
+    margin: 20px auto;
+    text-align: center;
+    line-height: 30px;
+    height: 30px;
+    border: 1px dashed black;
+}

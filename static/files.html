@@ -1,0 +1,18 @@
+<div id="actual-view">
+<div id="list-row list-header">
+<div class="filename">Filename</div>
+<div class="filesize">Size (bytes)</div>
+<div class="filevotes">Votes</div>
+</div>
+
+<div class="list-row" data-ng-repeat="file in files">
+    <div class="filename"><a data-ng-href="/static/dump/{{ file.name }}">{{ file.name }}</a></div>
+    <div class="filesize">{{ file.size | number:3 }}</div>
+    <div class="filevotes">{{ file.votes }}</div>
+</div>
+
+<div class="drop-box" ngf-drop ng-model="uploads" ngf-drag-over-class="dragover" ngf-multiple="true" ngf-allow-dir="true">
+    Drop new files here
+</div> 
+<div class="drop-box" ngf-no-file-drop>File Drag/Drop is not supported for this browser</div>
+</div>

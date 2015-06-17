@@ -6,6 +6,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from werkzeug import secure_filename
 import sys
 import os.path
+from pprint import pprint
 import string
 import random
 
@@ -74,14 +75,15 @@ def files():
         else:
             db_files[i.filename] = i.votes
     if request.method == 'POST':
-        f = request.files['daFile']
+        f = request.files['file']
+        pprint(f)
         name = secure_filename(f.filename)
-	if not os.path.isfile(dumppath + name):
+        if not os.path.isfile(dumppath + name):
             f.save(dumppath + name)
             size = os.path.getsize(dumppath + name)
-            db.add(FileVotes(name, 0))
+            db.session.add(FileVotes(name, 0))
             db.session.commit()
-	    return '{"d": {"name": "/static/dump/%s", "size": %d} }' % (name, size)
+            return '{"d": {"name": "/static/dump/%s", "size": %d, "votes": 0} }' % (name, size)
         else:
             db.session.commit()
             return '{"d": {"error": "exists"} }', 400
@@ -96,8 +98,8 @@ def files():
                 else:
                     votes = 0
                     newFile = FileVotes(entry, 0)
-                    db.add(newFile)
-                    db.flush()
+                    db.session.add(newFile)
+                    db.session.flush()
 		result.append('{"name": "/static/dump/%s", "size": %d, "votes": %d}' % (entry, size, votes))
         db.session.commit()
         return '{"d": [%s] }' % ','.join(result)
