@@ -62,7 +62,7 @@ def votes():
     daFile.votes += 1
     db.session.add(daFile)
     db.session.commit()
-    return '{"d": {"name": %d} }' % daFile.votes
+    return '{"d": {"vote": %d} }' % daFile.votes
 
 
 @app.route('/files', methods=['GET', 'POST'])

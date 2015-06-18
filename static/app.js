@@ -29,11 +29,24 @@ app.config(function($stateProvider, $urlRouterProvider) {
     })
 });
 
+app.service("VoteService", ["$http", function($http) {
+    this.sendVote = function (vote) {
+        return $http({
+            method: "POST",
+            url: "/votes",
+            data: vote
+        }).then(function (result) {
+            return result.data["d"];
+        });
+    };
+}]);
+
+
 app.controller("BaseController", ["$scope" , function($scope) {
 
 }]);
 
-app.controller("FilesController", ["$scope", "files", "Upload", function($scope, files, Upload) {
+app.controller("FilesController", ["$scope", "files", "Upload", "VoteService", function($scope, files, Upload, VoteService) {
     $scope.files = files;
     $scope.$watch('uploads', function () {
         $scope.upload($scope.uploads);
@@ -55,6 +68,11 @@ app.controller("FilesController", ["$scope", "files", "Upload", function($scope,
                 });
             }
         }
+    };
+    $scope.vote = function(file){
+        VoteService.sendVote({filename: file.name}).then(function(result){
+            file.votes = result.votes;
+        });
     };
 
 }]);

@@ -23,12 +23,13 @@ module.exports = function(config){
     },
       
     files : [
-      'tests.js',
-      'test-data.js',
       'angular.min.js',
+      'angular-mocks.js',
       'angular-ui-router.min.js',
       'ng-file-upload.min.js',
-      'app.js'
+      'app.js',
+      'tests.js',
+      'test-data.js'
     ]
       
 
