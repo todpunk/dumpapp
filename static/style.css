@@ -1,3 +1,16 @@
+body {
+    background-color: #181818;
+    color: lavender;
+}
+
+a {
+    color: #0088cc;
+}
+
+a .visited {
+    color: #4488cc;
+}
+
 #content {
     width: 95%;
     margin: 0 auto;
@@ -5,6 +18,29 @@
 
 #content h1 {
     text-align: center;
+}
+
+#sign-in-block {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 5;
+    width: 185px;
+    font-size: 1em;
+    line-height: 1em;
+}
+
+.loginfield {
+    width: 170px;
+}
+
+.loginfield span{
+    width: 30px;
+}
+
+.loginfield input{
+    width: 80px;
+    float: right;
 }
 
 .list-row {
@@ -34,5 +70,5 @@
     text-align: center;
     line-height: 30px;
     height: 30px;
-    border: 1px dashed black;
+    border: 1px dashed lavender;
 }

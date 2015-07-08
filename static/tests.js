@@ -78,7 +78,6 @@ describe("FilesController", function() {
         expect($scope.files[0].votes).toEqual(2);
         expect($scope.files[1].votes).toEqual(4);
     });
-
 });
 
 describe("VoteService", function () {
@@ -110,6 +109,39 @@ describe("VoteService", function () {
         });
         httpBackend.flush();
         expect(deserialized).toEqual("thing");
-    });    
+    });
+});
+
+describe("ConfigService", function () {
+
+    var service, httpBackend, configData;
+    beforeEach(module("angulardump"));
+    beforeEach(inject(function(ConfigService, $httpBackend){
+        service = ConfigService;
+        httpBackend = $httpBackend;
+    }));
+    beforeEach(function() {
+        configData = { d: {
+            dumplinkpath: '/path/to/files/',
+            sizelimit: 100 * 1024 * 1024
+        }};
+    });
+
+    it("should get the config", function() {
+        httpBackend.expectGET("/config").respond(200, configData);
+        var result = service.getConfig();
+        httpBackend.flush();
+    });
+
+    it("should deserialize the return value", function() {
+        var deserialized;
+        httpBackend.expectGET("/config").respond(200, configData);
+        var result = service.getConfig();
+        result.then(function(thing) {
+            deserialized = thing;
+        });
+        httpBackend.flush();
+        expect(deserialized).toEqual(configData.d);
+    });
 });
 

@@ -1,20 +1,33 @@
-var app = angular.module("angulardump", ["ui.router", "ngFileUpload"]);
+var app = angular.module("angulardump", ["ui.router", "ngCookies", "ngFileUpload"]);
 
 
-
-
-
-app.config(function($stateProvider, $urlRouterProvider) {
+app.config(["$stateProvider", "$urlRouterProvider", function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise("/dump/files");
     $stateProvider
     .state('base', {
         url: "/dump",
-        templateUrl: "/static/base.html",
-        controller: "BaseController"
+        templateUrl: "static/base.html",
+        controller: "BaseController",
+        resolve: {
+            appConfig: ["ConfigService", function(ConfigService) {
+                return ConfigService.getConfig()
+                .then(function (result) {
+                    return result;
+                }, function (result) {
+                    console.log(result);
+                })
+            }],
+            username: ["$cookies", function($cookies) {
+                return $cookies.username;
+            }],
+            pin: ["$cookies", function($cookies) {
+                return $cookies.pin;
+            }]
+        }
     })
     .state("base.files", {
         url: "/files",
-        templateUrl: "/static/files.html",
+        templateUrl: "static/files.html",
         controller: "FilesController",
         resolve: {
             files: function($http) {
@@ -27,7 +40,19 @@ app.config(function($stateProvider, $urlRouterProvider) {
             }
         }
     })
-});
+}]);
+
+app.service("LoginService", ["$http", function($http) {
+    this.login = function (username, pin) {
+        return $http({
+            method: "POST",
+            url: "/login",
+            data: {username: username, pin: pin}
+        }).then(function (result) {
+            return result.data["d"];
+        });
+    };
+}]);
 
 app.service("VoteService", ["$http", function($http) {
     this.sendVote = function (vote) {
@@ -41,12 +66,30 @@ app.service("VoteService", ["$http", function($http) {
     };
 }]);
 
-
-app.controller("BaseController", ["$scope" , function($scope) {
-
+app.service("ConfigService", ["$http", function($http) {
+    this.getConfig = function () {
+        return $http({
+            method: "GET",
+            url: "/config"
+        }).then(function (result) {
+            return result.data["d"];
+        });
+    };
 }]);
 
-app.controller("FilesController", ["$scope", "files", "Upload", "VoteService", function($scope, files, Upload, VoteService) {
+
+app.controller("BaseController", ["$scope", "appConfig", "username", "pin", function($scope, appConfig, username, pin) {
+    $scope.appConfig = appConfig;
+    console.log(username);
+    console.log(pin);
+    console.log(typeof(pin));
+    $scope.username = username ? username : "";
+    $scope.pin = pin ? pin : "";
+    $scope.loggedin = (username && pin) ? true : false;
+    console.log("logged in: " + $scope.loggedin)
+}]);
+
+app.controller("FilesController", ["$scope", "files", "Upload", "VoteService", "LoginService", "$cookies", function($scope, files, Upload, VoteService, LoginService, $cookies) {
     $scope.files = files;
     $scope.$watch('uploads', function () {
         $scope.upload($scope.uploads);
@@ -70,9 +113,29 @@ app.controller("FilesController", ["$scope", "files", "Upload", "VoteService", f
         }
     };
     $scope.vote = function(file){
-        VoteService.sendVote({filename: file.name}).then(function(result){
+        VoteService.sendVote({filename: file.name, username: $scope.username, pin: $scope.pin}).then(function(result){
             file.votes = result.votes;
         });
+    };
+    $scope.login = function() {
+        $scope.loggedin = false;
+        if ($scope.username === undefined || $scope.username == "" || $scope.pin === undefined || $scope.pin === "") {
+            $scope.loggedin = false; return false;
+        }
+        LoginService.login($scope.username, $scope.pin).then(function(result) {
+            if (!(result === true)) {
+                $scope.loggedin = false; return false;
+            }
+            $cookies.username = $scope.username;
+            $cookies.pin = $scope.pin;
+            $scope.loggedin = true;
+        });
+    };
+    $scope.logout = function() {
+        delete $cookies.username;
+        delete $cookies.pin;
+        $scope.pin = "";
+        $scope.loggedin = false;
     };
 
 }]);

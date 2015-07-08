@@ -15,12 +15,14 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 db = SQLAlchemy(app)
 
+# This path must be relative to this file, and the user running app.py must have read/write permission,
+# but defaults to under /static if you want app.py to serve the files
 dumppath = 'static/dump/'
-dumplinkpath = '/static/dump/'
+dumplinkpath = '/%s' % dumppath
 sizelimit = 1024 * 1024 * 100  # number of MBs, defaulting at 100MB
 
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True)
     email = db.Column(db.String(120), unique=True)
     pin = db.Column(db.String(40))
@@ -36,17 +38,27 @@ class User(db.Model):
         return '<User %r>' % self.username
 
 
-class FileVotes(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    filename = db.Column(db.String(500), unique=True)
-    votes = db.Column(db.Integer, default=0)
+class Vote(db.Model):
+    vote_id = db.Column(db.Integer, primary_key=True)
+    filename_id = db.Column(db.Integer, db.ForeignKey('filename.file_id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'))
 
-    def __init__(self, filename, votes=0):
-        self.filename = filename
-        self.votes = votes
+    def __init__(self, filename_id, user_id):
+        self.filename_id = filename_id
+        self.user_id = user_id
 
     def __repr__(self):
-        return '%s : %d' % (self.filename, self.votes)
+        return '%d : %d' % (self.filename_id, self.user_id)
+
+class Filename(db.Model):
+    file_id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(500), unique=True)
+
+    def __init__(self, filename):
+        self.filename = filename
+
+    def __repr__(self):
+        return '<Filename: %s>' % (self.filename)
 
 
 @app.route('/')
@@ -58,33 +70,48 @@ def default_view():
 def votes_view():
     data = request.get_json()
     try:
-        da_file = FileVotes.query.filter(FileVotes.filename == data.get('filename')).one()
+        da_file = Filename.query.filter(Filename.filename == data.get('filename')).one()
     except NoResultFound:
         return '{"d": {"error": "Filename not found"} }', 400
-    da_file.votes += 1
-    db.session.add(da_file)
-    db.session.commit()
-    return '{"d": {"vote": %d} }' % da_file.votes
+    try:
+        da_user = User.query.filter(User.username == data.get('username')).filter(User.pin == data.get('pin')).one()
+        da_vote = Vote.query.filter(Vote.filename_id == da_file.file_id).filter(Vote.user_id == da_user.user_id).count()
+    except NoResultFound:
+        return '{"d": {"error": "User not found"} }', 400
+    if da_vote == 0:
+        db.session.add(Vote(da_file.file_id, da_user.user_id))
+        db.session.commit()
+    return '{"d": {"votes": %d} }' % Vote.query.filter(Vote.filename_id == da_file.file_id).count()
 
 
 @app.route('/config', methods=['GET'])
 def config_view():
-    result = {
+    result = {'d': {
         'dumplinkpath': dumplinkpath,
         'sizelimit': sizelimit
-    }
+    }}
     return ujson.encode(result)
+
+
+@app.route('/login', methods=['POST'])
+def login_view():
+    data = request.get_json()
+    try:
+        User.query.filter(User.username == data.get('username')).filter(User.pin == data.get('pin')).one()
+    except NoResultFound:
+        return '{"d": {"error": "User not found"} }', 400
+    return '{"d": true }'
 
 
 @app.route('/files', methods=['GET', 'POST'])
 def files_view():
     db_files = {}
-    for i in FileVotes.query.all():
+    for i in Filename.query.all():
         if not os.path.isfile(dumppath + i.filename):
             db.session.delete(i)
             db.session.flush()
         else:
-            db_files[i.filename] = i.votes
+            db_files[i.filename] = Vote.query.filter(Vote.filename_id == i.file_id).count()
     if request.method == 'POST':
         f = request.files['file']
         pprint(f)
@@ -92,7 +119,9 @@ def files_view():
         if not os.path.isfile(dumppath + name):
             f.save(dumppath + name)
             size = os.path.getsize(dumppath + name)
-            db.session.add(FileVotes(name, 0))
+            dbfile = Filename(name)
+            db.session.add(dbfile)
+            db.session.flush()
             db.session.commit()
             return '{"d": {"name": "%s", "size": %d, "votes": 0} }' % (name, size)
         else:
@@ -107,13 +136,17 @@ def files_view():
                     fvotes = db_files[entry]
                 else:
                     fvotes = 0
-                    new_file = FileVotes(entry, 0)
+                    new_file = Filename(entry)
                     db.session.add(new_file)
                     db.session.flush()
                 result.append('{"name": "%s", "size": %d, "votes": %d}' % (entry, size, fvotes))
         db.session.commit()
         return '{"d": [%s] }' % ','.join(result)
 
+@app.after_request
+def add_header(response):
+    response.cache_control.max_age = 30
+    return response
 
 def main():
     action = sys.argv[1]
@@ -137,5 +170,6 @@ if __name__ == "__main__":
         main()
     else:
         app.debug = True
+        app.testing = True
         app.run()
 

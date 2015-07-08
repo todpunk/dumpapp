@@ -1,4 +1,14 @@
 <div id="actual-view">
+
+<div id="sign-in-block" data-ng-hide="loggedin">
+    <div class="loginfield"><span>Username:</span><input data-ng-model="username"></div><br />
+    <div class="loginfield"><span>Pin:</span><input type="text" min="4" data-ng-model="pin" data-ng-pattern="/^[0-9]{4,40}$/"></div><br />
+    <div data-ng-click="login()"><a data-ng-href="">Login!</a></div>
+</div>
+<div class="sign-in-block" data-ng-show="loggedin">
+    <div data-ng-click="logout()"><a data-ng-href="">Logout!</a></div>
+</div>
+
 <div id="list-row list-header">
 <div class="filename">Filename</div>
 <div class="filesize">Size (bytes)</div>
@@ -6,13 +16,13 @@
 </div>
 
 <div class="list-row" data-ng-repeat="file in files">
-    <div class="filename"><a data-ng-href="/static/dump/{{ file.name }}">{{ file.name }}</a></div>
-    <div class="filesize">{{ file.size | number:3 }}</div>
-    <div class="filevotes">{{ file.votes }} <span class="vote" data-ng-click="vote(file)">+</span></div>
+    <div class="filename"><a data-ng-href="{{ appConfig.dumplinkpath }}{{ file.name }}">{{ file.name }}</a></div>
+    <div class="filesize">{{ file.size | number }}</div>
+    <div class="filevotes">{{ file.votes }}<span class="vote" data-ng-click="vote(file)">+</span></div>
 </div>
 
-<div class="drop-box" ngf-drop ng-model="uploads" ngf-drag-over-class="dragover" ngf-multiple="true" ngf-allow-dir="true">
+<div class="drop-box" data-ngf-drop data-ng-model="uploads" data-ngf-drag-over-class="dragover" data-ngf-multiple="true" data-ngf-allow-dir="true">
     Drop new files here
 </div> 
-<div class="drop-box" ngf-no-file-drop>File Drag/Drop is not supported for this browser</div>
+<div class="drop-box" data-ngf-no-file-drop>File Drag/Drop is not supported for this browser</div>
 </div>
