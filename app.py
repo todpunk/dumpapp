@@ -108,6 +108,9 @@ def files_view():
     db_files = {}
     for i in Filename.query.all():
         if not os.path.isfile(dumppath + i.filename):
+            votes = Vote.query.filter(Vote.filename_id == i.file_id).all()
+            for vote in votes:
+                db.session.delete(vote)
             db.session.delete(i)
             db.session.flush()
         else:
@@ -171,5 +174,5 @@ if __name__ == "__main__":
     else:
         app.debug = True
         app.testing = True
-        app.run()
+        app.run(host='0.0.0.0', port=5000)
 

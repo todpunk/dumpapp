@@ -10,9 +10,9 @@
 </div>
 
 <div id="list-row list-header">
-<div class="filename">Filename</div>
-<div class="filesize">Size (bytes)</div>
-<div class="filevotes">Votes</div>
+<div class="filename"><a href="" data-ng-click="reverse=!reverse;order('name', reverse)">Filename</a></div>
+<div class="filesize"><a href="" data-ng-click="reverse=!reverse;order('size', reverse)">Size (bytes)</a></div>
+<div class="filevotes"><a href="" data-ng-click="reverse=!reverse;order('votes', reverse)">Votes</a></div>
 </div>
 
 <div class="list-row" data-ng-repeat="file in files">

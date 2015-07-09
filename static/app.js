@@ -80,17 +80,14 @@ app.service("ConfigService", ["$http", function($http) {
 
 app.controller("BaseController", ["$scope", "appConfig", "username", "pin", function($scope, appConfig, username, pin) {
     $scope.appConfig = appConfig;
-    console.log(username);
-    console.log(pin);
-    console.log(typeof(pin));
     $scope.username = username ? username : "";
     $scope.pin = pin ? pin : "";
     $scope.loggedin = (username && pin) ? true : false;
-    console.log("logged in: " + $scope.loggedin)
 }]);
 
-app.controller("FilesController", ["$scope", "files", "Upload", "VoteService", "LoginService", "$cookies", function($scope, files, Upload, VoteService, LoginService, $cookies) {
-    $scope.files = files;
+app.controller("FilesController", ["$scope", "$filter", "files", "Upload", "VoteService", "LoginService", "$cookies", function($scope, $filter, files, Upload, VoteService, LoginService, $cookies) {
+    var orderBy = $filter('orderBy');
+    $scope.files = orderBy(files, '-votes');
     $scope.$watch('uploads', function () {
         $scope.upload($scope.uploads);
     });
@@ -136,6 +133,10 @@ app.controller("FilesController", ["$scope", "files", "Upload", "VoteService", "
         delete $cookies.pin;
         $scope.pin = "";
         $scope.loggedin = false;
+    };
+
+    $scope.order = function(predicate, reverse) {
+        $scope.files = orderBy($scope.files, predicate, reverse);
     };
 
 }]);
